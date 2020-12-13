@@ -30,7 +30,7 @@ pub async fn ingest(
     item: web::Json<HttpPostData>,
 ) -> Result<HttpResponse, AppError> {
     if log_enabled!(log::Level::Info) {
-        info!("Route POST /speculare : {:?}", item);
+        info!("Route POST /ingest : {:?}", item);
     }
     // make all insert taking advantage of web::block to offload the request thread
     web::block(move || insert_all_block(item, db.get()?)).await?;
@@ -48,12 +48,17 @@ fn insert_all_block(item: web::Json<HttpPostData>, conn: ConnType) -> Result<(),
         created_at: mcreated_at,
     };
     // Insert or update if conflict
-    insert_into(bench_stats)
+    let inserted = insert_into(bench_stats)
         .values(&data_bench)
         // damnit, conflict as there are multiple commit_hash in the file (dsls)
         .on_conflict(crate::data::schema::bench_stats::commit_hash)
         .do_nothing()
         .execute(&conn)?;
+    // If we don't insert anything, don't store it another time
+    // TODO - Might be usefull to instead of do_nothing, change the branch name
+    if inserted == 0 {
+        return Ok(());
+    }
     // Construct NewBenchStatsValues
     let mut new_data: Vec<NewBenchStatsValues> = Vec::with_capacity(item.datas.len());
     for data in &item.datas {

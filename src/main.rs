@@ -8,6 +8,7 @@ mod errors;
 mod handlers;
 mod routes;
 mod server;
+mod views;
 
 use diesel::prelude::PgConnection;
 use diesel::r2d2::ConnectionManager;
