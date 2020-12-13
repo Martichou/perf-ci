@@ -1,0 +1,1 @@
+DROP TABLE bench_stats,bench_stat_values;
