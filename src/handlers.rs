@@ -1,4 +1,5 @@
 use crate::data::models::*;
+use crate::data::models_http::HttpRawData;
 use crate::data::schema::bench_stat_values::dsl::*;
 use crate::data::schema::bench_stats::dsl::*;
 use crate::errors::AppError;
@@ -8,26 +9,10 @@ use actix_web::{web, HttpResponse};
 use chrono::prelude::*;
 use diesel::dsl::insert_into;
 use diesel::prelude::*;
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct PostData {
-    pub bench: String,
-    pub mean: f64,
-    pub median: f64,
-    pub slope: f64,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct HttpPostData {
-    pub branch: String,
-    pub commit_hash: String,
-    pub datas: Vec<PostData>,
-}
 
 pub async fn ingest(
     db: web::Data<Pool>,
-    item: web::Json<HttpPostData>,
+    item: web::Json<HttpRawData>,
 ) -> Result<HttpResponse, AppError> {
     if log_enabled!(log::Level::Info) {
         info!("Route POST /ingest : {:?}", item);
@@ -38,7 +23,7 @@ pub async fn ingest(
     Ok(HttpResponse::Ok().finish())
 }
 
-fn insert_all_block(item: web::Json<HttpPostData>, conn: ConnType) -> Result<(), AppError> {
+fn insert_all_block(item: web::Json<HttpRawData>, conn: ConnType) -> Result<(), AppError> {
     // Received time is so the created time
     let mcreated_at = Utc::now().naive_local();
     // Construct BenchStats

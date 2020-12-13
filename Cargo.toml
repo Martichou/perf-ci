@@ -1,5 +1,5 @@
 [package]
-name = "endpoint"
+name = "perf_ci"
 version = "0.1.0"
 authors = ["Martichou <martichou.andre@gmail.com>"]
 edition = "2018"

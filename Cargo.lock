@@ -575,21 +575,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "endpoint"
-version = "0.1.0"
-dependencies = [
- "actix-web",
- "chrono",
- "diesel",
- "dotenv",
- "env_logger",
- "log",
- "openssl",
- "r2d2",
- "serde",
-]
-
-[[package]]
 name = "enum-as-inner"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1189,6 +1174,21 @@ name = "percent-encoding"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e"
+
+[[package]]
+name = "perf_ci"
+version = "0.1.0"
+dependencies = [
+ "actix-web",
+ "chrono",
+ "diesel",
+ "dotenv",
+ "env_logger",
+ "log",
+ "openssl",
+ "r2d2",
+ "serde",
+]
 
 [[package]]
 name = "pin-project"
