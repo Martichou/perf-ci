@@ -2,6 +2,7 @@ use super::Pool;
 
 use crate::routes;
 
+use actix_files::Files;
 use actix_web::{middleware, App, HttpServer};
 use diesel::prelude::PgConnection;
 use diesel::r2d2::ConnectionManager;
@@ -37,6 +38,7 @@ pub async fn server() -> std::io::Result<()> {
         App::new()
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
+            .service(Files::new("/static", "./static/"))
             .data(pool.clone())
             .configure(routes::routes)
     });

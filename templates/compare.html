@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+	<div class="container w-full mx-auto p-4">
+		<p class="mb-4">Actually comparing two benchmarks, use the box below to enter two commit hash and compare both.</p>
+		<div class="container border-1 border-white rounded p-4 mb-4">
+			<div class="grid grid-cols-2 gap-4 mb-4">
+				<div class="col-span-1">
+					<input id="commitA" type="text" placeholder="Commit A" class="px-3 py-3 placeholder-gray-200 text-gray-200 relative bg-dark-100 rounded text-sm shadow outline-none focus:outline-none focus:shadow-outline w-full"/>
+				</div>
+				<div class="col-span-1">
+					<input id="commitB" type="text" placeholder="Commit B" class="px-3 py-3 placeholder-gray-200 text-gray-200 relative bg-dark-100 rounded text-sm shadow outline-none focus:outline-none focus:shadow-outline w-full"/>
+				</div>
+			</div>
+			<button class="text-green-300 bg-transparent border border-solid border-green-500 hover:bg-green-500 hover:text-white active:bg-green-600 font-bold uppercase text-xs px-4 py-2 rounded outline-none focus:outline-none mr-1 mb-1" 
+				type="button" onclick="submit_compare(); return false;">
+				Submit
+			</button>
+		</div>
+		<div class="bg-black rounded mb-4 p-2 pl-4 pr-4 overflow-x-auto">
+			<h4 class="text-center" style="font-size: large;">comparing {{ commit_b }} against {{ commit_a }}</h4>
+			<table class="w-full table-auto text-right">
+				<thead>
+					<tr>
+						<th></th>
+						<th>commit_a</th>
+						<th>commit_b</th>
+						<th>b%a</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for data in datas %}
+					<tr>
+						<th>{{ data.bench }}</th>
+						<td>{{ data.mean_a }}</td>
+						<td>{{ data.mean_b }}</td>
+						<td><span>??%</span></td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+{% endblock %}
+{% block js %}
+	<script>
+		function check_null(item) {
+			if (item == null || item == "") {
+				return true;
+			}
+			return false;
+		}
+
+		function submit_compare() {
+			let a = document.getElementById("commitA").value;
+			let b = document.getElementById("commitB").value;
+			if (check_null(a) || check_null(b)) {
+				alert("Commit A and Commit B must not be null");
+				return;
+			}
+			let params = new URLSearchParams();
+        	params.append("a", a);
+        	params.append("b", b);
+			window.location.search = params.toString();
+		}
+	</script>
+{% endblock %}
