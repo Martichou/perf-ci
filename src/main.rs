@@ -8,6 +8,7 @@ mod errors;
 mod handlers;
 mod routes;
 mod server;
+mod validator;
 mod views;
 
 use diesel::prelude::PgConnection;

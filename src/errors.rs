@@ -6,7 +6,6 @@ use std::fmt;
 pub enum AppErrorType {
     DbError,
     PoolError,
-    InvalidRequest,
     BlockingError,
 }
 
@@ -29,11 +28,6 @@ impl AppError {
                 error_type: AppErrorType::PoolError,
                 ..
             } => "Cannot get the connection pool to the database".to_string(),
-            AppError {
-                message: None,
-                error_type: AppErrorType::InvalidRequest,
-                ..
-            } => "Invalid request".to_string(),
             _ => "An unexpected error has occurred".to_string(),
         }
     }
@@ -53,7 +47,6 @@ pub struct AppErrorResponse {
 impl ResponseError for AppError {
     fn status_code(&self) -> StatusCode {
         match self.error_type {
-            AppErrorType::InvalidRequest => StatusCode::BAD_REQUEST,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
