@@ -1,5 +1,5 @@
 use crate::data::models::*;
-use crate::data::models_http::HttpRawData;
+use crate::data::models_http::*;
 use crate::data::schema::bench_stat_values::dsl::*;
 use crate::data::schema::bench_stats::dsl::*;
 use crate::errors::AppError;
@@ -9,6 +9,8 @@ use actix_web::{web, HttpResponse};
 use chrono::prelude::*;
 use diesel::dsl::insert_into;
 use diesel::prelude::*;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 pub async fn ingest(
     db: web::Data<Pool>,
@@ -62,4 +64,68 @@ fn insert_all_block(item: web::Json<HttpRawData>, conn: ConnType) -> Result<(), 
         .execute(&conn)?;
     // Return Ok(()) as everything went fine
     Ok(())
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CompareInput {
+    hash_a: String,
+    hash_b: String,
+}
+
+pub async fn compare_hash(
+    db: web::Data<Pool>,
+    item: web::Json<CompareInput>,
+) -> Result<HttpResponse, AppError> {
+    if log_enabled!(log::Level::Info) {
+        info!("Route POST /compare_hash");
+    }
+    // make all get taking advantage of web::block to offload the request thread
+    // TODO - Validate the hash_a and hash_b to avoid SQL injection
+    let data = web::block(move || get_compare(item, db.get()?)).await?;
+    // Return the json data
+    Ok(HttpResponse::Ok().json(data))
+}
+
+fn get_compare(
+    item: web::Json<CompareInput>,
+    conn: ConnType,
+) -> Result<HttpRawCompareData, AppError> {
+    let a: BenchStats = bench_stats
+        .filter(crate::data::schema::bench_stats::dsl::commit_hash.eq(&item.hash_a))
+        .first::<BenchStats>(&conn)?;
+    let b: BenchStats = bench_stats
+        .filter(crate::data::schema::bench_stats::dsl::commit_hash.eq(&item.hash_b))
+        .first::<BenchStats>(&conn)?;
+
+    let datas_a: Vec<BenchStatsValues> = BenchStatsValues::belonging_to(&a).load(&conn)?;
+    let datas_b: Vec<BenchStatsValues> = BenchStatsValues::belonging_to(&b).load(&conn)?;
+
+    let mut datas: Vec<HttpCompareData> = Vec::with_capacity(datas_a.len());
+    let mut containing: HashMap<String, usize> = HashMap::with_capacity(datas_a.len());
+    for (counter, d) in datas_a.into_iter().enumerate() {
+        datas.push(HttpCompareData {
+            bench: d.label.to_owned(),
+            mean_a: (d.mean * 100.0).round() / 100.0,
+            mean_b: 0.0,
+        });
+        containing.insert(d.label, counter);
+    }
+    for d in datas_b {
+        match containing.get(&d.label) {
+            Some(position) => {
+                datas.get_mut(*position).unwrap().mean_b = (d.mean * 100.0).round() / 100.0;
+            }
+            None => datas.push(HttpCompareData {
+                bench: d.label.to_owned(),
+                mean_a: 0.0,
+                mean_b: (d.mean * 100.0).round() / 100.0,
+            }),
+        }
+    }
+
+    Ok(HttpRawCompareData {
+        branch_a: a.branch,
+        branch_b: b.branch,
+        datas,
+    })
 }

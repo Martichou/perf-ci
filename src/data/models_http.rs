@@ -26,7 +26,5 @@ pub struct HttpCompareData {
 pub struct HttpRawCompareData {
     pub branch_a: String,
     pub branch_b: String,
-    pub commit_hash_a: String,
-    pub commit_hash_b: String,
     pub datas: Vec<HttpCompareData>,
 }
