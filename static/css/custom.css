@@ -1,3 +1,11 @@
-td,th {
+td, th {
     padding:0 15px;
+}
+
+.positive {
+    color: rgb(255, 26, 26);
+}
+
+.negative {
+    color: rgb(114, 255, 114);
 }

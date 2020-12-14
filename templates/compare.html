@@ -11,23 +11,23 @@
 					<input id="commitB" type="text" placeholder="Commit B" class="px-3 py-3 placeholder-gray-200 text-gray-200 relative bg-dark-100 rounded text-sm shadow outline-none focus:outline-none focus:shadow-outline w-full"/>
 				</div>
 			</div>
-			<button class="text-green-300 bg-transparent border border-solid border-green-500 hover:bg-green-500 hover:text-white active:bg-green-600 font-bold uppercase text-xs px-4 py-2 rounded outline-none focus:outline-none mr-1 mb-1" 
+			<button class="text-green-400 bg-transparent border border-solid border-green-400 hover:bg-green-500 hover:text-white active:bg-green-500 font-bold uppercase text-xs px-4 py-2 rounded outline-none focus:outline-none mr-1 mb-1" 
 				type="button" onclick="submit_compare(); return false;">
 				Submit
 			</button>
 		</div>
-		<div class="bg-black rounded mb-4 p-2 pl-4 pr-4 overflow-x-auto">
-			<h4 class="text-center" style="font-size: large;">comparing {{ commit_b }} against {{ commit_a }}</h4>
-			<table class="w-full table-auto text-right">
+		<div class="bg-black rounded mb-4 p-4 overflow-x-auto">
+			<h4 class="text-center" style="font-size: large;">comparing <span class="p-1 pl-2 pr-2 bg-blue-400">{{ commit_b|fmt("{:.6}") }}</span> against <span class="p-1 pl-2 pr-2 bg-blue-400">{{ commit_a|fmt("{:.6}") }}</span></h4>
+			<table class="w-full table-auto text-right mt-4">
 				<thead>
 					<tr>
 						<th></th>
 						<th>commit_a</th>
 						<th>commit_b</th>
-						<th>b%a</th>
+						<th>change</th>
 					</tr>
 				</thead>
-				<tbody>
+				<tbody id="data_values">
 					
 				</tbody>
 			</table>
@@ -55,5 +55,75 @@
         	params.append("b", b);
 			window.location.search = params.toString();
 		}
+
+		function percent_chg(a, b) {
+        	if (a && b) {
+	            return 100 * (b - a) / a;
+        	} else {
+            	return null;
+	        }
+    	}
+
+		function load_data() {
+			let values = Object.assign({}, {
+            	hash_a: "{{ commit_a }}",
+				hash_b: "{{ commit_b }}",
+			});
+			fetch(window.location.origin + "/compare_hash", {
+				method: "POST",
+				body: JSON.stringify(values),
+				headers: new Headers({
+					  "Content-Type": "application/json"
+				}),
+			}).then((response) => {
+				return response.json()
+			})
+			.then((data) => {
+				let data_values = document.getElementById("data_values");
+				const documentFragment = document.createDocumentFragment();
+				data["datas"].forEach(element => {
+					console.log("Working for element " + element["bench"]);
+					const node = document.createElement("tr");
+					
+					const bench_name = document.createElement("th");
+					const bench_name_node = document.createTextNode(element["bench"]);
+					bench_name.appendChild(bench_name_node);
+					node.appendChild(bench_name);
+
+					const mean_a = document.createElement("td");
+					const mean_a_node = document.createTextNode(element["mean_a"]);
+					mean_a.appendChild(mean_a_node);
+					node.appendChild(mean_a);
+					
+					const mean_b = document.createElement("td");
+					const mean_b_node = document.createTextNode(element["mean_b"]);
+					mean_b.appendChild(mean_b_node);
+					node.appendChild(mean_b);
+					
+					const percent_change = document.createElement("td");
+					const percent_change_span = document.createElement("span");
+					const change_value = percent_chg(element["mean_a"], element["mean_b"]);
+					if (change_value > 1) {
+						percent_change_span.classList.add("text-red-400");
+					} else if (change_value < -1) {
+						percent_change_span.classList.add("text-green-400");
+					}
+					const percent_change_node = document.createTextNode(change_value.toFixed(1) + "%");
+					percent_change_span.appendChild(percent_change_node);
+					percent_change.appendChild(percent_change_span);
+					node.appendChild(percent_change);
+
+					documentFragment.appendChild(node);
+				});
+				data_values.appendChild(documentFragment);
+			})
+			.catch((err) => {
+				alert(err);
+			});
+		}
+
+		window.addEventListener("load", function(event) {
+    		load_data();
+  		});
 	</script>
 {% endblock %}
