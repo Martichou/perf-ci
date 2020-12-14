@@ -1,26 +1,12 @@
-use crate::data::models::*;
-use crate::data::schema::bench_stats::dsl::*;
 use crate::errors::AppError;
-use crate::{ConnType, Pool};
 
 use actix_web::{web, HttpResponse};
 use askama::Template;
-use diesel::prelude::*;
 use std::collections::HashMap;
-
-fn get_summary_vec(size: i64, page: i64, conn: ConnType) -> Result<Vec<BenchStats>, AppError> {
-    Ok(bench_stats
-        .limit(size)
-        .offset(page * size)
-        .order_by(created_at.desc())
-        .load(&conn)?)
-}
 
 #[derive(Template)]
 #[template(path = "index.html")]
-struct Index {
-    datas: Vec<BenchStats>,
-}
+struct Index {}
 
 #[derive(Template)]
 #[template(path = "compare.html")]
@@ -30,7 +16,6 @@ struct Compare {
 }
 
 pub async fn index(
-    db: web::Data<Pool>,
     query: web::Query<HashMap<String, String>>,
 ) -> Result<HttpResponse, AppError> {
     if log_enabled!(log::Level::Info) {
@@ -41,6 +26,7 @@ pub async fn index(
     let query_b = query.get("b");
 
     if query_a.is_some() && query_b.is_some() {
+        // Return the response
         Ok(HttpResponse::Ok().content_type("text/html").body(
             Compare {
                 commit_a: query_a.unwrap().to_owned(),
@@ -50,11 +36,9 @@ pub async fn index(
             .unwrap(),
         ))
     } else {
-        // Get the last 25 benchmark summary
-        let data = web::block(move || get_summary_vec(25, 0, db.get()?)).await?;
         // Return the response
         Ok(HttpResponse::Ok()
             .content_type("text/html")
-            .body(Index { datas: data }.render().unwrap()))
+            .body(Index{}.render().unwrap()))
     }
 }

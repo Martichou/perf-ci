@@ -117,8 +117,9 @@
 				});
 				data_values.appendChild(documentFragment);
 			})
-			.catch((err) => {
-				alert(err);
+			.catch((_) => {
+				alert("Error fetching commits hash");
+				window.location = "/"
 			});
 		}
 

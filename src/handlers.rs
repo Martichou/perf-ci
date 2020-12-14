@@ -82,9 +82,13 @@ pub async fn compare_hash(
     // make all get taking advantage of web::block to offload the request thread
     // TODO - Validate the hash_a and hash_b to avoid SQL injection
     // TODO - Handle error too
-    let data = web::block(move || get_compare(item, db.get()?)).await?;
-    // Return the json data
-    Ok(HttpResponse::Ok().json(data))
+    let data = web::block(move || get_compare(item, db.get()?)).await;
+    match data {
+        // Return the json data
+        Ok(val) => Ok(HttpResponse::Ok().json(val)),
+        // Return a 400
+        Err(_) => Ok(HttpResponse::BadRequest().await?)
+    }
 }
 
 fn get_compare(

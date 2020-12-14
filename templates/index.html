@@ -1,27 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
-	<div class="container w-full mx-auto p-4">
-		<p class="mb-4">Lastest benchmarks, use the box below to enter two commit hash and compare both.</p>
-		<div class="container border-1 border-white rounded p-4 mb-4">
-			<div class="grid grid-cols-2 gap-4 mb-4">
-				<div class="col-span-1">
-					<input id="commitA" type="text" placeholder="Commit A" class="px-3 py-3 placeholder-gray-200 text-gray-200 relative bg-dark-100 rounded text-sm shadow outline-none focus:outline-none focus:shadow-outline w-full"/>
+	<div class="flex h-screen">
+		<div class="container w-full m-auto p-4">
+			<p class="mb-4">Lastest benchmarks, use the box below to enter two commit hash and compare both.</p>
+			<div class="container border-1 border-white rounded p-4 mb-4">
+				<div class="grid grid-cols-2 gap-4 mb-4">
+					<div class="col-span-1">
+						<input id="commitA" type="text" placeholder="Commit A" class="px-3 py-3 placeholder-gray-200 text-gray-200 relative bg-dark-100 rounded text-sm shadow outline-none focus:outline-none focus:shadow-outline w-full"/>
+					</div>
+					<div class="col-span-1">
+						<input id="commitB" type="text" placeholder="Commit B" class="px-3 py-3 placeholder-gray-200 text-gray-200 relative bg-dark-100 rounded text-sm shadow outline-none focus:outline-none focus:shadow-outline w-full"/>
+					</div>
 				</div>
-				<div class="col-span-1">
-					<input id="commitB" type="text" placeholder="Commit B" class="px-3 py-3 placeholder-gray-200 text-gray-200 relative bg-dark-100 rounded text-sm shadow outline-none focus:outline-none focus:shadow-outline w-full"/>
-				</div>
+				<button class="text-green-400 bg-transparent border border-solid border-green-400 hover:bg-green-500 hover:text-white active:bg-green-500 font-bold uppercase text-xs px-4 py-2 rounded outline-none focus:outline-none mr-1 mb-1" 
+					type="button" onclick="submit_compare(); return false;">
+					Submit
+				</button>
 			</div>
-			<button class="text-green-400 bg-transparent border border-solid border-green-400 hover:bg-green-500 hover:text-white active:bg-green-500 font-bold uppercase text-xs px-4 py-2 rounded outline-none focus:outline-none mr-1 mb-1" 
-				type="button" onclick="submit_compare(); return false;">
-				Submit
-			</button>
 		</div>
-		{% for item in datas %}
-		<div class="bg-black rounded mb-4 p-2 pl-4 pr-4 flex justify-between">
-			<span><span class="bg-green-400 text-black p-4 mr-4">{{ item.branch }}</span> {{ item.commit_hash }}</span>
-			<span>{{ item.created_at }}</span>
-		</div>
-		{% endfor %}
 	</div>
 {% endblock %}
 {% block js %}
