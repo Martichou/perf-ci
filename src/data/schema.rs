@@ -5,19 +5,31 @@ table! {
         mean -> Float8,
         median -> Float8,
         slope -> Float8,
-        commit_hash -> Varchar,
+        bsid -> Int4,
         created_at -> Timestamp,
     }
 }
 
 table! {
-    bench_stats (commit_hash) {
+    bench_stats (bsid) {
+        bsid -> Int4,
         branch -> Varchar,
         commit_hash -> Varchar,
+        os -> Varchar,
         created_at -> Timestamp,
     }
 }
 
-joinable!(bench_stat_values -> bench_stats (commit_hash));
+table! {
+    filterable_os (os) {
+        os -> Varchar,
+    }
+}
 
-allow_tables_to_appear_in_same_query!(bench_stat_values, bench_stats,);
+joinable!(bench_stat_values -> bench_stats (bsid));
+
+allow_tables_to_appear_in_same_query!(
+    bench_stat_values,
+    bench_stats,
+    filterable_os,
+);

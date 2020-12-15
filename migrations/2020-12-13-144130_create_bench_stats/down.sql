@@ -1,1 +1,1 @@
-DROP TABLE bench_stats,bench_stat_values;
+DROP TABLE bench_stats,bench_stat_values,filterable_os;

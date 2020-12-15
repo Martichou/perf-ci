@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct HttpOneData {
+pub struct HttpData {
     pub bench: String,
     pub mean: f64,
     pub median: f64,
@@ -12,7 +12,8 @@ pub struct HttpOneData {
 pub struct HttpRawData {
     pub branch: String,
     pub commit_hash: String,
-    pub datas: Vec<HttpOneData>,
+    pub os: String,
+    pub datas: Vec<HttpData>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

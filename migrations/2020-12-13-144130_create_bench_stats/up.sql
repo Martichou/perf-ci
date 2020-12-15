@@ -1,6 +1,8 @@
 CREATE TABLE bench_stats (
+	bsid SERIAL PRIMARY KEY,
 	branch VARCHAR(255) NOT NULL,
-	commit_hash VARCHAR(40) PRIMARY KEY NOT NULL,
+	commit_hash VARCHAR(40) NOT NULL,
+	os VARCHAR(40) NOT NULL,
 	created_at TIMESTAMP NOT NULL
 );
 CREATE TABLE bench_stat_values (
@@ -9,7 +11,10 @@ CREATE TABLE bench_stat_values (
 	mean FLOAT NOT NULL,
 	median FLOAT NOT NULL,
 	slope FLOAT NOT NULL,
-	commit_hash VARCHAR(40) NOT NULL,
+	bsid SERIAL NOT NULL,
 	created_at TIMESTAMP NOT NULL
 );
-ALTER TABLE bench_stat_values ADD CONSTRAINT commit_hash_fkey FOREIGN KEY (commit_hash) REFERENCES bench_stats (commit_hash) DEFERRABLE;
+CREATE TABLE filterable_os (
+	os VARCHAR(40) PRIMARY KEY NOT NULL UNIQUE
+);
+ALTER TABLE bench_stat_values ADD CONSTRAINT bsid_fkey FOREIGN KEY (bsid) REFERENCES bench_stats (bsid) DEFERRABLE;

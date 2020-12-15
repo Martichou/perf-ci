@@ -15,9 +15,7 @@ struct Compare {
     commit_b: String,
 }
 
-pub async fn index(
-    query: web::Query<HashMap<String, String>>,
-) -> Result<HttpResponse, AppError> {
+pub async fn index(query: web::Query<HashMap<String, String>>) -> Result<HttpResponse, AppError> {
     if log_enabled!(log::Level::Info) {
         info!("Route GET /");
     }
@@ -39,6 +37,6 @@ pub async fn index(
         // Return the response
         Ok(HttpResponse::Ok()
             .content_type("text/html")
-            .body(Index{}.render().unwrap()))
+            .body(Index {}.render().unwrap()))
     }
 }

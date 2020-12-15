@@ -13,6 +13,6 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
         .service(
             web::scope("/api")
                 .wrap(auth)
-                .route("/ingest", web::post().to(handlers::ingest))
+                .route("/ingest", web::post().to(handlers::ingest)),
         );
 }

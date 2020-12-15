@@ -1,13 +1,14 @@
 use crate::data::models::*;
 use crate::data::models_http::*;
-use crate::data::schema::bench_stat_values::dsl::*;
+use crate::data::schema::bench_stat_values::dsl::bench_stat_values;
 use crate::data::schema::bench_stats::dsl::*;
+use crate::data::schema::filterable_os::dsl::filterable_os;
 use crate::errors::AppError;
 use crate::{ConnType, Pool};
 
 use actix_web::{web, HttpResponse};
 use chrono::prelude::*;
-use diesel::dsl::insert_into;
+use diesel::dsl::{exists, insert_into, select};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -29,23 +30,31 @@ fn insert_all_block(item: web::Json<HttpRawData>, conn: ConnType) -> Result<(), 
     // Received time is so the created time
     let mcreated_at = Utc::now().naive_local();
     // Construct BenchStats
-    let data_bench = BenchStats {
-        branch: item.branch.to_owned(),
-        commit_hash: item.commit_hash.to_owned(),
+    let data_bench = NewBenchStats {
+        branch: &item.branch,
+        commit_hash: &item.commit_hash,
+        os: &item.os,
         created_at: mcreated_at,
     };
-    // Insert or update if conflict
-    let inserted = insert_into(bench_stats)
-        .values(&data_bench)
-        // damnit, conflict as there are multiple commit_hash in the file (dsls)
-        .on_conflict(crate::data::schema::bench_stats::commit_hash)
-        .do_nothing()
-        .execute(&conn)?;
-    // If we don't insert anything, don't store it another time
-    // TODO - Might be usefull to instead of do_nothing, change the branch name
-    if inserted == 0 {
+    // Detect if the commit_hash and os already exist
+    let does_exists: bool = select(exists(
+        bench_stats.filter(commit_hash.eq(&item.commit_hash).and(os.eq(&item.os))),
+    ))
+    .get_result(&conn)?;
+    // If the item already exist, return early
+    if does_exists {
         return Ok(());
     }
+    // Insert the filterable os value
+    insert_into(filterable_os)
+        .values(&FilterableOs {
+            os: item.os.to_owned(),
+        })
+        .execute(&conn)?;
+    // Insert data
+    let inserted_row: BenchStats = insert_into(bench_stats)
+        .values(&data_bench)
+        .get_result(&conn)?;
     // Construct NewBenchStatsValues
     let mut new_data: Vec<NewBenchStatsValues> = Vec::with_capacity(item.datas.len());
     for data in &item.datas {
@@ -54,7 +63,7 @@ fn insert_all_block(item: web::Json<HttpRawData>, conn: ConnType) -> Result<(), 
             mean: data.mean,
             median: data.median,
             slope: data.slope,
-            commit_hash: &item.commit_hash,
+            bsid: inserted_row.bsid,
             created_at: mcreated_at,
         })
     }
@@ -87,7 +96,7 @@ pub async fn compare_hash(
         // Return the json data
         Ok(val) => Ok(HttpResponse::Ok().json(val)),
         // Return a 400
-        Err(_) => Ok(HttpResponse::BadRequest().await?)
+        Err(_) => Ok(HttpResponse::BadRequest().await?),
     }
 }
 
