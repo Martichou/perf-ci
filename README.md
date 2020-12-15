@@ -39,6 +39,13 @@ $ cargo install diesel_cli --no-default-features --features postgres
 $ diesel setup
 ```
 
+Example
+--------------------------
+
+<img src="assets/image.png" width="100%">
+
+Live demo: [perf-ci.speculare.cloud](https://perf-ci.speculare.cloud/?a=c0a700596c4366b65855083bdd2f8719e95ee0a1&b=ef4a59f3f1c9b7047ee663622f1ec87cb2bf26f1) related to the [sys_metrics](https://github.com/Martichou/sys_metrics) repository.
+
 Contributing
 --------------------------
 
