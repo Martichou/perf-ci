@@ -46,11 +46,11 @@ fn insert_all_block(item: web::Json<HttpRawData>, conn: ConnType) -> Result<(), 
         return Ok(());
     }
     // Insert the filterable os value
-    insert_into(filterable_os)
+    let _ = insert_into(filterable_os)
         .values(&FilterableOs {
             os: item.os.to_owned(),
         })
-        .execute(&conn)?;
+        .execute(&conn);
     // Insert data
     let inserted_row: BenchStats = insert_into(bench_stats)
         .values(&data_bench)
@@ -79,6 +79,7 @@ fn insert_all_block(item: web::Json<HttpRawData>, conn: ConnType) -> Result<(), 
 pub struct CompareInput {
     hash_a: String,
     hash_b: String,
+    os: String,
 }
 
 pub async fn compare_hash(
@@ -105,10 +106,10 @@ fn get_compare(
     conn: ConnType,
 ) -> Result<HttpRawCompareData, AppError> {
     let a: BenchStats = bench_stats
-        .filter(crate::data::schema::bench_stats::dsl::commit_hash.eq(&item.hash_a))
+        .filter(commit_hash.eq(&item.hash_a).and(os.eq(&item.os)))
         .first::<BenchStats>(&conn)?;
     let b: BenchStats = bench_stats
-        .filter(crate::data::schema::bench_stats::dsl::commit_hash.eq(&item.hash_b))
+        .filter(commit_hash.eq(&item.hash_b).and(os.eq(&item.os)))
         .first::<BenchStats>(&conn)?;
 
     let datas_a: Vec<BenchStatsValues> = BenchStatsValues::belonging_to(&a).load(&conn)?;

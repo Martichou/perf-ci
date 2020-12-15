@@ -28,8 +28,4 @@ table! {
 
 joinable!(bench_stat_values -> bench_stats (bsid));
 
-allow_tables_to_appear_in_same_query!(
-    bench_stat_values,
-    bench_stats,
-    filterable_os,
-);
+allow_tables_to_appear_in_same_query!(bench_stat_values, bench_stats, filterable_os,);

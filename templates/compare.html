@@ -17,7 +17,14 @@
 			</button>
 		</div>
 		<div class="bg-black rounded mb-4 p-4 overflow-x-auto">
-			<h4 class="text-center" style="font-size: large;">comparing <span class="p-1 pl-2 pr-2 bg-blue-400">{{ commit_b|fmt("{:.6}") }}</span> against <span class="p-1 pl-2 pr-2 bg-blue-400">{{ commit_a|fmt("{:.6}") }}</span></h4>
+			<div class="flex justify-between">
+				<h4 class="flex items-center" style="font-size: large;">comparing <span class="p-1 pl-2 pr-2 ml-1 mr-1 bg-blue-400">{{ commit_b|fmt("{:.6}") }}</span> against <span class="p-1 pl-2 pr-2 ml-1 mr-1 bg-blue-400">{{ commit_a|fmt("{:.6}") }}</span></h4>
+				<select id="osbench" class="border bg-dark-100 rounded px-3 py-2 outline-none">
+					{% for item in data %}
+					<option class="py-1">{{ item.os }}</option>
+					{% endfor %}
+				</select>
+			</div>
 			<table class="w-full table-auto text-right mt-4">
 				<thead>
 					<tr>
@@ -68,6 +75,7 @@
 			let values = Object.assign({}, {
             	hash_a: "{{ commit_a }}",
 				hash_b: "{{ commit_b }}",
+				os: document.getElementById("osbench").value,
 			});
 			fetch(window.location.origin + "/compare_hash", {
 				method: "POST",
@@ -80,9 +88,9 @@
 			})
 			.then((data) => {
 				let data_values = document.getElementById("data_values");
+				data_values.textContent = '';
 				const documentFragment = document.createDocumentFragment();
 				data["datas"].forEach(element => {
-					console.log("Working for element " + element["bench"]);
 					const node = document.createElement("tr");
 					
 					const bench_name = document.createElement("th");
@@ -119,12 +127,17 @@
 			})
 			.catch((_) => {
 				alert("Error fetching commits hash");
-				window.location = "/"
+				//window.location = "/"
 			});
 		}
 
 		window.addEventListener("load", function(event) {
     		load_data();
-  		});
+		});
+		
+		document.getElementById("osbench").addEventListener("change", function() {
+			load_data();
+		});
+
 	</script>
 {% endblock %}

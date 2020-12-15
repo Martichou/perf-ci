@@ -1,8 +1,16 @@
+use crate::data::models::FilterableOs;
+use crate::data::schema::filterable_os::dsl::*;
 use crate::errors::AppError;
+use crate::{ConnType, Pool};
 
+use crate::diesel::RunQueryDsl;
 use actix_web::{web, HttpResponse};
 use askama::Template;
 use std::collections::HashMap;
+
+fn get_filterable_os(conn: ConnType) -> Result<Vec<FilterableOs>, AppError> {
+    Ok(filterable_os.load(&conn)?)
+}
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -13,9 +21,13 @@ struct Index {}
 struct Compare {
     commit_a: String,
     commit_b: String,
+    data: Vec<FilterableOs>,
 }
 
-pub async fn index(query: web::Query<HashMap<String, String>>) -> Result<HttpResponse, AppError> {
+pub async fn index(
+    db: web::Data<Pool>,
+    query: web::Query<HashMap<String, String>>,
+) -> Result<HttpResponse, AppError> {
     if log_enabled!(log::Level::Info) {
         info!("Route GET /");
     }
@@ -24,11 +36,14 @@ pub async fn index(query: web::Query<HashMap<String, String>>) -> Result<HttpRes
     let query_b = query.get("b");
 
     if query_a.is_some() && query_b.is_some() {
+        // Get the filterable os here
+        let data = web::block(move || get_filterable_os(db.get()?)).await?;
         // Return the response
         Ok(HttpResponse::Ok().content_type("text/html").body(
             Compare {
                 commit_a: query_a.unwrap().to_owned(),
                 commit_b: query_b.unwrap().to_owned(),
+                data,
             }
             .render()
             .unwrap(),
