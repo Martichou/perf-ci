@@ -28,8 +28,17 @@ pub async fn server() -> std::io::Result<()> {
     // Init the connection to the postgresql
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
+    // Get the max number of connection to open
+    // No fear to parse it to u32 and unwrap, if not a correct value crash is ok
+    let max_db_connection = match std::env::var("DATABASE_MAX_CONNECTION") {
+        Ok(value) => value,
+        Err(_) => "10".into(),
+    }
+    .parse::<u32>()
+    .unwrap();
     // Create a pool of connection
     let pool: Pool = r2d2::Pool::builder()
+        .max_size(max_db_connection)
         .build(manager)
         .expect("Failed to create pool");
     // Construct the HttpServer instance.
