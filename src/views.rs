@@ -1,20 +1,32 @@
-use crate::data::models::FilterableOs;
-use crate::data::schema::filterable_os::dsl::*;
+use crate::data::models::{BenchStats, FilterableOs};
+use crate::data::schema::{
+    bench_stats::dsl::{bench_stats as dsl_bench, created_at},
+    filterable_os::dsl::*,
+};
 use crate::errors::AppError;
 use crate::{ConnType, Pool};
 
-use crate::diesel::RunQueryDsl;
 use actix_web::{web, HttpResponse};
 use askama::Template;
+use diesel::*;
 use std::collections::HashMap;
 
 fn get_filterable_os(conn: ConnType) -> Result<Vec<FilterableOs>, AppError> {
     Ok(filterable_os.load(&conn)?)
 }
 
+fn get_commits(conn: ConnType) -> Result<Vec<BenchStats>, AppError> {
+    Ok(dsl_bench
+        .limit(20)
+        .order_by(created_at.desc())
+        .load(&conn)?)
+}
+
 #[derive(Template)]
 #[template(path = "index.html")]
-struct Index {}
+struct Index {
+    commits: Vec<BenchStats>,
+}
 
 #[derive(Template)]
 #[template(path = "compare.html")]
@@ -49,9 +61,10 @@ pub async fn index(
             .unwrap(),
         ))
     } else {
+        let data = web::block(move || get_commits(db.get()?)).await?;
         // Return the response
         Ok(HttpResponse::Ok()
             .content_type("text/html")
-            .body(Index {}.render().unwrap()))
+            .body(Index { commits: data }.render().unwrap()))
     }
 }
