@@ -16,10 +16,15 @@ fn get_filterable_os(conn: ConnType) -> Result<Vec<FilterableOs>, AppError> {
 }
 
 fn get_commits(conn: ConnType) -> Result<Vec<BenchStats>, AppError> {
-    Ok(dsl_bench
+    let mut data: Vec<BenchStats> = dsl_bench
         .limit(20)
         .order_by(created_at.desc())
-        .load(&conn)?)
+        .load(&conn)?;
+    if data.len() > 0 {
+        let o_os = data[0].os.clone();
+        data.retain(|item| item.os == o_os);
+    }
+    Ok(data)
 }
 
 #[derive(Template)]
