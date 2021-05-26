@@ -17,13 +17,13 @@
         </div>
 
         <p class="mt-8 mb-4">Lastest commits</p>
-        <div class="container border-1 border-white rounded p-4">
+        <div class="overflow-x-auto container border-1 border-white rounded p-4">
             <table class="table-auto border-collapse w-full">
                 <tbody class="text-sm font-normal text-gray-200">
                     {% for item in commits %}
                     <tr class="hover:bg-dark-100 py-10">
                         <td class="px-4 py-4">{{ item.commit_hash }}</td>
-                        <td class="px-4 py-4">{{ item.created_at }}</td>
+                        <td class="py-4 float-right">{{ item.created_at }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
