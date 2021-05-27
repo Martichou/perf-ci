@@ -1,143 +1,139 @@
-{% extends "base.html" %}
-{% block content %}
-	<div class="container w-full mx-auto p-4">
-		<p class="mb-4">Actually comparing two benchmarks, use the box below to enter two commit hash and compare both.</p>
-		<div class="container border-1 border-white rounded p-4 mb-4">
-			<div class="grid grid-cols-2 gap-4 mb-4">
-				<div class="col-span-1">
-					<input id="commitA" type="text" placeholder="Commit A" class="px-3 py-3 placeholder-gray-200 text-gray-200 relative bg-dark-100 rounded text-sm shadow outline-none focus:outline-none focus:shadow-outline w-full"/>
-				</div>
-				<div class="col-span-1">
-					<input id="commitB" type="text" placeholder="Commit B" class="px-3 py-3 placeholder-gray-200 text-gray-200 relative bg-dark-100 rounded text-sm shadow outline-none focus:outline-none focus:shadow-outline w-full"/>
-				</div>
-			</div>
-			<button class="text-green-400 bg-transparent border border-solid border-green-400 hover:bg-green-500 hover:text-white active:bg-green-500 font-bold uppercase text-xs px-4 py-2 rounded outline-none focus:outline-none mr-1 mb-1" 
-				type="button" onclick="submit_compare(); return false;">
+{% extends "base.html" %} {% block content %}
+<div class="container w-full mx-auto p-4">
+    <p class="mb-4">Actually comparing two benchmarks, use the box below to enter two commit hash and compare both.</p>
+    <div class="container border-1 border-white rounded p-4 mb-4">
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="col-span-1">
+                <input id="commitA" type="text" placeholder="Commit A" class="px-3 py-3 placeholder-gray-200 text-gray-200 relative bg-dark-100 rounded text-sm shadow outline-none focus:outline-none focus:shadow-outline w-full" />
+            </div>
+            <div class="col-span-1">
+                <input id="commitB" type="text" placeholder="Commit B" class="px-3 py-3 placeholder-gray-200 text-gray-200 relative bg-dark-100 rounded text-sm shadow outline-none focus:outline-none focus:shadow-outline w-full" />
+            </div>
+        </div>
+        <button class="text-green-400 bg-transparent border border-solid border-green-400 hover:bg-green-500 hover:text-white active:bg-green-500 font-bold uppercase text-xs px-4 py-2 rounded outline-none focus:outline-none mr-1 mb-1" type="button" onclick="submit_compare(); return false;">
 				Submit
 			</button>
-		</div>
-		<div class="bg-black rounded mb-4 p-4 overflow-x-auto">
-			<div class="flex justify-between">
-				<h4 class="flex items-center" style="font-size: large;">comparing <span class="p-1 pl-2 pr-2 ml-1 mr-1 bg-blue-400">{{ commit_b|fmt("{:.6}") }}</span> against <span class="p-1 pl-2 pr-2 ml-1 mr-1 bg-blue-400">{{ commit_a|fmt("{:.6}") }}</span></h4>
-				<select id="osbench" class="border bg-dark-100 rounded px-3 py-2 outline-none">
+    </div>
+    <div class="bg-black rounded mb-4 p-4 overflow-x-auto">
+        <div class="flex justify-between">
+            <h4 class="flex items-center" style="font-size: large;">comparing <span class="p-1 pl-2 pr-2 ml-1 mr-1 bg-blue-400">{{ commit_b|fmt("{:.6}") }}</span> against <span class="p-1 pl-2 pr-2 ml-1 mr-1 bg-blue-400">{{ commit_a|fmt("{:.6}") }}</span></h4>
+            <select id="osbench" class="border bg-dark-100 rounded px-3 py-2 outline-none">
 					{% for item in data %}
 					<option class="py-1">{{ item.os }}</option>
 					{% endfor %}
 				</select>
-			</div>
-			<table class="w-full table-auto text-right mt-4">
-				<thead>
-					<tr>
-						<th></th>
-						<th>commit_a</th>
-						<th>commit_b</th>
-						<th>change</th>
-					</tr>
-				</thead>
-				<tbody id="data_values">
-					
-				</tbody>
-			</table>
-		</div>
-	</div>
-{% endblock %}
-{% block js %}
-	<script>
-		function check_null(item) {
-			if (item == null || item == "") {
-				return true;
-			}
-			return false;
-		}
+        </div>
+        <table class="w-full table-auto text-right mt-4">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>commit_a</th>
+                    <th>commit_b</th>
+                    <th>change</th>
+                </tr>
+            </thead>
+            <tbody id="data_values">
 
-		function submit_compare() {
-			let a = document.getElementById("commitA").value;
-			let b = document.getElementById("commitB").value;
-			if (check_null(a) || check_null(b)) {
-				alert("Commit A and Commit B must not be null");
-				return;
-			}
-			let params = new URLSearchParams();
-        	params.append("a", a);
-        	params.append("b", b);
-			window.location.search = params.toString();
-		}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %} {% block js %}
+<script>
+    function check_null(item) {
+        if (item == null || item == "") {
+            return true;
+        }
+        return false;
+    }
 
-		function percent_chg(a, b) {
-        	if (a && b) {
-	            return 100 * (b - a) / a;
-        	} else {
-            	return null;
-	        }
-    	}
+    function submit_compare() {
+        let a = document.getElementById("commitA").value;
+        let b = document.getElementById("commitB").value;
+        if (check_null(a) || check_null(b)) {
+            alert("Commit A and Commit B must not be null");
+            return;
+        }
+        let params = new URLSearchParams();
+        params.append("a", a);
+        params.append("b", b);
+        window.location.search = params.toString();
+    }
 
-		function load_data() {
-			let values = Object.assign({}, {
-            	hash_a: "{{ commit_a }}",
-				hash_b: "{{ commit_b }}",
-				os: document.getElementById("osbench").value,
-			});
-			fetch(window.location.origin + "/compare_hash", {
-				method: "POST",
-				body: JSON.stringify(values),
-				headers: new Headers({
-					  "Content-Type": "application/json"
-				}),
-			}).then((response) => {
-				return response.json()
-			})
-			.then((data) => {
-				let data_values = document.getElementById("data_values");
-				data_values.textContent = '';
-				const documentFragment = document.createDocumentFragment();
-				data["datas"].forEach(element => {
-					const node = document.createElement("tr");
-					
-					const bench_name = document.createElement("th");
-					const bench_name_node = document.createTextNode(element["bench"]);
-					bench_name.appendChild(bench_name_node);
-					node.appendChild(bench_name);
+    function percent_chg(a, b) {
+        if (a && b) {
+            return 100 * (b - a) / a;
+        } else {
+            return null;
+        }
+    }
 
-					const mean_a = document.createElement("td");
-					const mean_a_node = document.createTextNode(element["mean_a"]);
-					mean_a.appendChild(mean_a_node);
-					node.appendChild(mean_a);
-					
-					const mean_b = document.createElement("td");
-					const mean_b_node = document.createTextNode(element["mean_b"]);
-					mean_b.appendChild(mean_b_node);
-					node.appendChild(mean_b);
-					
-					const percent_change = document.createElement("td");
-					const percent_change_span = document.createElement("span");
-					const change_value = percent_chg(element["mean_a"], element["mean_b"]);
-					if (change_value > 1) {
-						percent_change_span.classList.add("text-red-400");
-					} else if (change_value < -1) {
-						percent_change_span.classList.add("text-green-400");
-					}
-					const percent_change_node = document.createTextNode(change_value.toFixed(1) + "%");
-					percent_change_span.appendChild(percent_change_node);
-					percent_change.appendChild(percent_change_span);
-					node.appendChild(percent_change);
+    function load_data() {
+        let values = Object.assign({}, {
+            hash_a: "{{ commit_a }}",
+            hash_b: "{{ commit_b }}",
+            os: document.getElementById("osbench").value,
+        });
+        fetch(window.location.origin + "/compare_hash", {
+                method: "POST",
+                body: JSON.stringify(values),
+                headers: new Headers({
+                    "Content-Type": "application/json"
+                }),
+            }).then((response) => {
+                return response.json()
+            })
+            .then((data) => {
+                let data_values = document.getElementById("data_values");
+                data_values.textContent = '';
+                const documentFragment = document.createDocumentFragment();
+                data["datas"].forEach(element => {
+                    const node = document.createElement("tr");
 
-					documentFragment.appendChild(node);
-				});
-				data_values.appendChild(documentFragment);
-			})
-			.catch((_) => {
-				alert("Error fetching commits hash");
-				//window.location = "/"
-			});
-		}
+                    const bench_name = document.createElement("th");
+                    const bench_name_node = document.createTextNode(element["bench"]);
+                    bench_name.appendChild(bench_name_node);
+                    node.appendChild(bench_name);
 
-		window.addEventListener("load", function(event) {
-    		load_data();
-		});
-		
-		document.getElementById("osbench").addEventListener("change", function() {
-			load_data();
-		});
+                    const mean_a = document.createElement("td");
+                    const mean_a_node = document.createTextNode(element["mean_a"]);
+                    mean_a.appendChild(mean_a_node);
+                    node.appendChild(mean_a);
 
-	</script>
+                    const mean_b = document.createElement("td");
+                    const mean_b_node = document.createTextNode(element["mean_b"]);
+                    mean_b.appendChild(mean_b_node);
+                    node.appendChild(mean_b);
+
+                    const percent_change = document.createElement("td");
+                    const percent_change_span = document.createElement("span");
+                    const change_value = percent_chg(element["mean_a"], element["mean_b"]);
+                    if (change_value > 1) {
+                        percent_change_span.classList.add("text-red-400");
+                    } else if (change_value < -1) {
+                        percent_change_span.classList.add("text-green-400");
+                    }
+                    const percent_change_node = document.createTextNode((change_value == null) ? "-" : change_value.toFixed(1) + "%");
+                    percent_change_span.appendChild(percent_change_node);
+                    percent_change.appendChild(percent_change_span);
+                    node.appendChild(percent_change);
+
+                    documentFragment.appendChild(node);
+                });
+                data_values.appendChild(documentFragment);
+            })
+            .catch((_) => {
+                alert("Error fetching commits hash");
+                //window.location = "/"
+            });
+    }
+
+    window.addEventListener("load", function(event) {
+        load_data();
+    });
+
+    document.getElementById("osbench").addEventListener("change", function() {
+        load_data();
+    });
+</script>
 {% endblock %}
